@@ -1,0 +1,21 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: scx-loader
+Source: https://github.com/sched-ext/scx-loader
+
+Files: *
+Copyright: 2024-2026 sched-ext contributors
+License: GPL-2
+
+Files: vendor/*
+Copyright: 2006-2026, the respective Rust crate authors
+License: vendored-crates
+ Vendored Rust crates are included to support offline builds.
+ Each crate retains its upstream license.
+
+License: GPL-2
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License version 2 as
+ published by the Free Software Foundation.
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ version 2 can be found in /usr/share/common-licenses/GPL-2.

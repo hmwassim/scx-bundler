@@ -1,0 +1,35 @@
+Source: scx
+Section: misc
+Priority: optional
+Maintainer: Andrea Righi <arighi@nvidia.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ cargo,
+ rustc,
+ clang (>= 16),
+ llvm,
+ libbpf-dev (>= 2:1.4.0),
+ libelf-dev,
+ libcap-dev,
+ zlib1g-dev,
+ libseccomp-dev,
+ cmake,
+ pkgconf,
+ jq,
+ protobuf-compiler,
+ linux-libc-dev,
+ linux-tools-common,
+ bpftool
+Standards-Version: 4.7.3
+Homepage: https://github.com/sched-ext/scx
+
+Package: scx
+Architecture: amd64
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+ libbpf1 (>= 2:1.4.0)
+Description: sched_ext schedulers and tools
+ sched_ext is a Linux kernel feature which enables implementing kernel
+ thread schedulers in BPF and dynamically loading them. This package
+ contains various scheduler implementations and support utilities.

@@ -1,0 +1,23 @@
+Source: scx-tools
+Section: misc
+Priority: optional
+Maintainer: Andrea Righi <arighi@nvidia.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ cargo,
+ rustc
+Standards-Version: 4.7.3
+Homepage: https://github.com/sched-ext/scx-loader
+
+Package: scx-tools
+Architecture: amd64
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+ scx (>= ${source:Version}),
+ policykit-1
+Recommends: dbus
+Description: sched_ext loader and control tools
+ scx_loader is a system daemon and DBus-based loader for sched_ext
+ schedulers. scxctl is the command-line client for managing schedulers
+ at runtime.
