@@ -1,4 +1,4 @@
-scx (1.1.1-1) trixie; urgency=medium
+scx-scheds (1.1.1-1) trixie; urgency=medium
 
   * Initial release for Debian Trixie.
 

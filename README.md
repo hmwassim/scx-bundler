@@ -8,7 +8,7 @@ sandboxed Rust toolchain — no `~/.cargo` or `~/.rustup` pollution.
 
 | Package | Contents | Source |
 |---------|----------|--------|
-| `scx` | sched_ext scheduler binaries (scx_bpfland, scx_rusty, ...) | [scx](https://github.com/sched-ext/scx) |
+| `scx-scheds` | sched_ext scheduler binaries (scx_bpfland, scx_rusty, ...) | [scx](https://github.com/sched-ext/scx) |
 | `scx-tools` | scx_loader daemon + scxctl CLI | [scx-loader](https://github.com/sched-ext/scx-loader) |
 
 ## Dependencies
@@ -23,31 +23,29 @@ sudo apt install libbpf-dev libelf-dev libcap-dev zlib1g-dev libseccomp-dev \
 ## Build
 
 Rust is bootstrapped via rustup into `build/rust/` on first run.
+Both repos must have a matching `v<VERSION>` tag or the build fails.
 
 ```bash
-make all                   # setup-rust → build both .debs → generate repo
+make all                   # build both .debs → generate repo
 make build                 # just build the .debs
 make build VERSION=1.0.0   # build a specific upstream version
 ```
 
-Output `.deb` files go to `repo/pool/`, APT metadata to `repo/dists/`.
-
 ## Install
 
 ```bash
-make install          # sudo dpkg -i both .debs
-sudo dpkg -i repo/pool/*/*/*/*.deb   # or manually
+make install                # sudo dpkg -i both .debs
+sudo dpkg -i repo/pool/*/*/*/*.deb
 ```
 
 ## How it works
 
-1. `git clone` upstream source at the requested version tag
-2. `cargo build --release` with sandboxed Rust (`build/rust/{rustup,cargo}/`)
-3. `dpkg-deb --build` into `repo/pool/main/`
-4. `scripts/update-repo.sh` generates `Packages.gz` + `Release`
-
-Rust is completely contained — set `RUSTUP_HOME` and `CARGO_HOME` to your own
-paths if you want to reuse the toolchain across projects.
+1. Verifies the version tag exists in both upstream repos
+2. `git clone` at the requested tag
+3. `cargo build --release` with sandboxed Rust (`build/rust/{rustup,cargo}/`)
+4. Scheduler binaries discovered dynamically with `find target/release -name 'scx_*'`
+5. `dpkg-deb --build` into `repo/pool/main/`
+6. `scx-tools` postinst copies config to `/etc/scx_loader/` and runs `daemon-reload`
 
 ## Clean
 

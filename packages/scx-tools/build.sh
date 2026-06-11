@@ -17,6 +17,13 @@ PATH="$CARGO_HOME/bin:$RUSTUP_HOME/bin:$PATH"
 STAGING="$BUILDDIR/scx-tools-staging"
 DEBNAME="scx-tools_${VERSION}_amd64.deb"
 
+# Verify the version tag exists upstream
+echo "==> Verifying tag $UPSTREAM_TAG exists in scx-loader repo..."
+if ! git ls-remote --tags --refs "$UPSTREAM_URL" "$UPSTREAM_TAG" | grep -q .; then
+  echo "ERROR: Tag $UPSTREAM_TAG not found in $UPSTREAM_URL" >&2
+  exit 1
+fi
+
 rm -rf "$STAGING"
 mkdir -p "$STAGING"
 
@@ -63,7 +70,7 @@ Version: $VERSION
 Architecture: amd64
 Maintainer: $(grep -m1 'Maintainer:' "$PKGDIR/debian/control" | sed 's/Maintainer: *//')
 Installed-Size: $SIZE
-Depends: scx (>= $VERSION), libc6, libgcc-s1, polkitd
+Depends: scx-scheds (>= $VERSION), libc6, libgcc-s1, polkitd
 Recommends: dbus
 Section: misc
 Priority: optional
@@ -73,6 +80,47 @@ Description: sched_ext loader and control tools
  schedulers. scxctl is the command-line client for managing schedulers
  at runtime.
 CONTROL
+
+# postinst: copy config to /etc, daemon-reload
+cat > "$DEB_DIR/postinst" <<-'POSTINST'
+#!/bin/sh
+set -e
+
+mkdir -p /etc/scx_loader
+
+if [ ! -f /etc/scx_loader/config.toml ]; then
+  cp /usr/share/scx_loader/config.toml /etc/scx_loader/config.toml
+fi
+
+systemctl daemon-reload || true
+POSTINST
+chmod 755 "$DEB_DIR/postinst"
+
+# prerm: stop the service before removal
+cat > "$DEB_DIR/prerm" <<-'PRERM'
+#!/bin/sh
+set -e
+
+case "$1" in
+  remove|upgrade|deconfigure)
+    systemctl stop scx_loader.service || true
+    ;;
+esac
+PRERM
+chmod 755 "$DEB_DIR/prerm"
+
+# postrm: daemon-reload after removal
+cat > "$DEB_DIR/postrm" <<-'POSTRM'
+#!/bin/sh
+set -e
+
+case "$1" in
+  remove)
+    systemctl daemon-reload || true
+    ;;
+esac
+POSTRM
+chmod 755 "$DEB_DIR/postrm"
 
 cd "$STAGING"
 find usr -type f -exec md5sum {} \; > "$DEB_DIR/md5sums"

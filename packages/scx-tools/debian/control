@@ -14,8 +14,8 @@ Architecture: amd64
 Depends:
  ${shlibs:Depends},
  ${misc:Depends},
- scx (>= ${source:Version}),
- policykit-1
+ scx-scheds (>= ${source:Version}),
+ polkitd
 Recommends: dbus
 Description: sched_ext loader and control tools
  scx_loader is a system daemon and DBus-based loader for sched_ext

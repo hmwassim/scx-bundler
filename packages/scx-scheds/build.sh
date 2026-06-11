@@ -15,7 +15,14 @@ export CARGO_HOME="${CARGO_HOME:-$BUILDDIR/rust/cargo}"
 PATH="$CARGO_HOME/bin:$RUSTUP_HOME/bin:$PATH"
 
 STAGING="$BUILDDIR/scx-staging"
-DEBNAME="scx_${VERSION}_amd64.deb"
+DEBNAME="scx-scheds_${VERSION}_amd64.deb"
+
+# Verify the version tag exists upstream
+echo "==> Verifying tag $UPSTREAM_TAG exists in scx repo..."
+if ! git ls-remote --tags --refs "$UPSTREAM_URL" "$UPSTREAM_TAG" | grep -q .; then
+  echo "ERROR: Tag $UPSTREAM_TAG not found in $UPSTREAM_URL" >&2
+  exit 1
+fi
 
 rm -rf "$STAGING"
 mkdir -p "$STAGING"
@@ -37,7 +44,6 @@ cargo build --release --workspace \
   --exclude scx_arena_selftests
 
 echo "==> Building scxtop..."
-# scxtop is excluded from workspace; build it separately
 if [ -f "tools/scxtop/Cargo.toml" ]; then
   cargo build --release -p scxtop
 elif ls tools/scxtop*/Cargo.toml 2>/dev/null; then
@@ -47,22 +53,11 @@ fi
 echo "==> Installing to staging..."
 SITEDIR="$STAGING/usr"
 
-# Install scheduler binaries
-SCHEDULERS="
-  scx_beerland scx_bpfland scx_cake scx_chaos scx_cosmos
-  scx_flash scx_flow scx_lavd scx_layered scx_mitosis
-  scx_p2dq scx_pandemonium scx_rlfifo scx_rustland
-  scx_rusty scx_tickless
-"
-for bin in $SCHEDULERS; do
-  install -Dm755 "target/release/$bin" "$SITEDIR/bin/$bin"
-done
-
-# Install scxtop if it was built
-if [ -f "target/release/scxtop" ]; then
-  install -Dm755 "target/release/scxtop" "$SITEDIR/bin/scxtop"
-fi
-
+# Dynamically discover all scheduler binaries
+while IFS= read -r -d '' bin; do
+  name=$(basename "$bin")
+  install -Dm755 "$bin" "$SITEDIR/bin/$name"
+done < <(find target/release -maxdepth 1 -type f -name 'scx_*' -print0)
 
 echo "==> Building .deb..."
 DEB_DIR="$STAGING/DEBIAN"
@@ -71,7 +66,7 @@ mkdir -p "$DEB_DIR"
 SIZE="$(du -sk "$STAGING" | cut -f1)"
 
 cat > "$DEB_DIR/control" <<-CONTROL
-Package: scx
+Package: scx-scheds
 Version: $VERSION
 Architecture: amd64
 Maintainer: $(grep -m1 'Maintainer:' "$PKGDIR/debian/control" | sed 's/Maintainer: *//')
@@ -80,13 +75,12 @@ Depends: libbpf1 (>= 1.4.0), libc6, libelf1, libgcc-s1, libseccomp2, zlib1g
 Section: misc
 Priority: optional
 Homepage: https://github.com/sched-ext/scx
-Description: sched_ext schedulers and tools
+Description: sched_ext schedulers
  sched_ext is a Linux kernel feature which enables implementing kernel
  thread schedulers in BPF and dynamically loading them. This package
- contains various scheduler implementations and support utilities.
+ contains various scheduler implementations.
 CONTROL
 
-# Generate checksums
 cd "$STAGING"
 find usr -type f -exec md5sum {} \; > "$DEB_DIR/md5sums"
 
@@ -94,8 +88,8 @@ cd "$BUILDDIR"
 dpkg-deb --build --root-owner-group scx-staging "$DEBNAME"
 
 echo "==> Moving .deb to repo..."
-mkdir -p "$REPODIR/pool/main/s/scx"
-mv "$BUILDDIR/$DEBNAME" "$REPODIR/pool/main/s/scx/$DEBNAME"
+mkdir -p "$REPODIR/pool/main/s/scx-scheds"
+mv "$BUILDDIR/$DEBNAME" "$REPODIR/pool/main/s/scx-scheds/$DEBNAME"
 
 rm -rf "$STAGING" "$SOURCE_DIR"
 

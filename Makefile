@@ -5,7 +5,7 @@ CARGO_HOME := $(abspath build/rust/cargo)
 export RUSTUP_HOME
 export CARGO_HOME
 
-.PHONY: all build build-scx build-scx-tools repo install install-scx install-scx-tools \
+.PHONY: all build build-scheds build-tools repo install install-scheds install-tools \
         setup-rust clean clean-all check-deps
 
 all: build repo
@@ -23,13 +23,13 @@ setup-rust: check-deps
 	@echo "    Rust ready: $$("$(RUSTUP_HOME)/bin/rustc" --version 2>/dev/null)"
 
 build: | setup-rust
-build: build-scx build-scx-tools
+build: build-scheds build-tools
 
-build-scx:
-	@echo "==> Building scx package..."
-	packages/scx/build.sh $(VERSION)
+build-scheds:
+	@echo "==> Building scx-scheds package..."
+	packages/scx-scheds/build.sh $(VERSION)
 
-build-scx-tools:
+build-tools:
 	@echo "==> Building scx-tools package..."
 	packages/scx-tools/build.sh $(VERSION)
 
@@ -37,12 +37,12 @@ repo:
 	@echo "==> Generating APT repository metadata..."
 	scripts/update-repo.sh $(RELEASE)
 
-install: install-scx install-scx-tools
+install: install-scheds install-tools
 
-install-scx:
-	sudo dpkg -i repo/pool/main/s/scx/scx_$(VERSION)_amd64.deb
+install-scheds:
+	sudo dpkg -i repo/pool/main/s/scx-scheds/scx-scheds_$(VERSION)_amd64.deb
 
-install-scx-tools:
+install-tools:
 	sudo dpkg -i repo/pool/main/s/scx-tools/scx-tools_$(VERSION)_amd64.deb
 
 check-deps:
