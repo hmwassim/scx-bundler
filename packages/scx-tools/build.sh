@@ -81,7 +81,7 @@ Description: sched_ext loader and control tools
  at runtime.
 CONTROL
 
-# postinst: copy config to /etc, daemon-reload
+# postinst: copy config, switch from direct service to loader
 cat > "$DEB_DIR/postinst" <<-'POSTINST'
 #!/bin/sh
 set -e
@@ -92,31 +92,54 @@ if [ ! -f /etc/scx_loader/config.toml ]; then
   cp /usr/share/scx_loader/config.toml /etc/scx_loader/config.toml
 fi
 
-systemctl daemon-reload || true
+case "$1" in
+  configure)
+    if [ -z "$2" ]; then
+      # fresh install — hand over from direct service to loader
+      systemctl disable --now scx.service || true
+      systemctl enable --now scx_loader.service || true
+    fi
+    ;;
+  abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+esac
 POSTINST
 chmod 755 "$DEB_DIR/postinst"
 
-# prerm: stop the service before removal
+# prerm: stop loader before removal
 cat > "$DEB_DIR/prerm" <<-'PRERM'
 #!/bin/sh
 set -e
 
 case "$1" in
-  remove|upgrade|deconfigure)
+  remove|deconfigure)
     systemctl stop scx_loader.service || true
+    ;;
+  upgrade)
     ;;
 esac
 PRERM
 chmod 755 "$DEB_DIR/prerm"
 
-# postrm: daemon-reload after removal
+# postrm: disable loader, restore direct service
 cat > "$DEB_DIR/postrm" <<-'POSTRM'
 #!/bin/sh
 set -e
 
 case "$1" in
   remove)
+    systemctl disable scx_loader.service || true
     systemctl daemon-reload || true
+    # restore direct service if scx-scheds is still installed
+    if dpkg -s scx-scheds 2>/dev/null | grep -q '^Status: install ok installed'; then
+      systemctl enable --now scx.service || true
+    fi
+    ;;
+  purge)
+    systemctl disable scx_loader.service || true
+    systemctl daemon-reload || true
+    ;;
+  upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
     ;;
 esac
 POSTRM

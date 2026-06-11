@@ -59,6 +59,10 @@ while IFS= read -r -d '' bin; do
   install -Dm755 "$bin" "$SITEDIR/bin/$name"
 done < <(find target/release -maxdepth 1 -type f -name 'scx_*' -print0)
 
+# systemd service + config for running a scheduler directly at boot
+install -Dm644 services/scx "$STAGING/etc/default/scx"
+install -Dm644 services/scx.service "$STAGING/lib/systemd/system/scx.service"
+
 echo "==> Building .deb..."
 DEB_DIR="$STAGING/DEBIAN"
 mkdir -p "$DEB_DIR"
@@ -80,6 +84,56 @@ Description: sched_ext schedulers
  thread schedulers in BPF and dynamically loading them. This package
  contains various scheduler implementations.
 CONTROL
+
+cat > "$DEB_DIR/postinst" <<-'POSTINST'
+#!/bin/sh
+set -e
+
+case "$1" in
+  configure)
+    if [ -z "$2" ]; then
+      # fresh install
+      systemctl enable --now scx.service || true
+    fi
+    ;;
+  abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+esac
+POSTINST
+chmod 755 "$DEB_DIR/postinst"
+
+cat > "$DEB_DIR/prerm" <<-'PRERM'
+#!/bin/sh
+set -e
+
+case "$1" in
+  remove|deconfigure)
+    systemctl stop scx.service || true
+    ;;
+  upgrade)
+    ;;
+esac
+PRERM
+chmod 755 "$DEB_DIR/prerm"
+
+cat > "$DEB_DIR/postrm" <<-'POSTRM'
+#!/bin/sh
+set -e
+
+case "$1" in
+  remove)
+    systemctl disable scx.service || true
+    systemctl daemon-reload || true
+    ;;
+  purge)
+    systemctl disable scx.service || true
+    systemctl daemon-reload || true
+    ;;
+  upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+    ;;
+esac
+POSTRM
+chmod 755 "$DEB_DIR/postrm"
 
 cd "$STAGING"
 find usr -type f -exec md5sum {} \; > "$DEB_DIR/md5sums"
