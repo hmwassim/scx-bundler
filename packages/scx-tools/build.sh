@@ -135,6 +135,8 @@ case "$1" in
     ;;
   purge)
     systemctl daemon-reload || true
+    rm -f /etc/scx_loader/config.toml
+    rmdir /etc/scx_loader 2>/dev/null || true
     ;;
   upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
     ;;
