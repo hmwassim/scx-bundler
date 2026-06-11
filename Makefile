@@ -1,5 +1,10 @@
 VERSION ?= $(shell cat VERSION 2>/dev/null || echo 1.1.1)
 RELEASE := trixie
+
+# libbpf-sys make build breaks on paths with spaces
+ifneq ($(words $(CURDIR)),1)
+$(error Path contains spaces. Move the repo to a path without spaces)
+endif
 RUSTUP_HOME := $(abspath build/rust/rustup)
 CARGO_HOME := $(abspath build/rust/cargo)
 export RUSTUP_HOME
