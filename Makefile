@@ -1,4 +1,4 @@
-VERSION ?= 1.1.1
+VERSION ?= $(shell cat VERSION 2>/dev/null || echo 1.1.1)
 RELEASE := trixie
 RUSTUP_HOME := $(abspath build/rust/rustup)
 CARGO_HOME := $(abspath build/rust/cargo)
