@@ -106,14 +106,14 @@ esac
 POSTINST
 chmod 755 "$DEB_DIR/postinst"
 
-# prerm: stop loader before removal
+# prerm: stop + disable loader before removal
 cat > "$DEB_DIR/prerm" <<-'PRERM'
 #!/bin/sh
 set -e
 
 case "$1" in
   remove|deconfigure)
-    systemctl stop scx_loader.service || true
+    systemctl disable --now scx_loader.service || true
     ;;
   upgrade)
     ;;
@@ -121,22 +121,19 @@ esac
 PRERM
 chmod 755 "$DEB_DIR/prerm"
 
-# postrm: disable loader, restore direct service
+# postrm: daemon-reload, restore direct service
 cat > "$DEB_DIR/postrm" <<-'POSTRM'
 #!/bin/sh
 set -e
 
 case "$1" in
   remove)
-    systemctl disable scx_loader.service || true
     systemctl daemon-reload || true
-    # restore direct service if scx-scheds is still installed
     if dpkg -s scx-scheds 2>/dev/null | grep -q '^Status: install ok installed'; then
       systemctl enable --now scx.service || true
     fi
     ;;
   purge)
-    systemctl disable scx_loader.service || true
     systemctl daemon-reload || true
     ;;
   upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)

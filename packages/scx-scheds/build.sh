@@ -108,7 +108,7 @@ set -e
 
 case "$1" in
   remove|deconfigure)
-    systemctl stop scx.service || true
+    systemctl disable --now scx.service || true
     ;;
   upgrade)
     ;;
@@ -121,12 +121,7 @@ cat > "$DEB_DIR/postrm" <<-'POSTRM'
 set -e
 
 case "$1" in
-  remove)
-    systemctl disable scx.service || true
-    systemctl daemon-reload || true
-    ;;
-  purge)
-    systemctl disable scx.service || true
+  remove|purge)
     systemctl daemon-reload || true
     ;;
   upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
