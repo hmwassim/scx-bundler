@@ -13,14 +13,14 @@ all: build repo
 setup-rust: check-deps
 	@echo "==> Installing rustup (sandboxed in build/rust/)..."
 	@mkdir -p "$(RUSTUP_HOME)" "$(CARGO_HOME)"
-	@if ! command -v rustup &>/dev/null && [ ! -f "$(RUSTUP_HOME)/bin/rustup" ]; then \
+	@if [ ! -x "$(RUSTUP_HOME)/bin/rustup" ]; then \
 		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-		  | sh -s -- -y --no-modify-path --default-toolchain stable \
-		    --rustup-home "$(RUSTUP_HOME)" --verbose 2>&1; \
+		  | RUSTUP_HOME="$(RUSTUP_HOME)" CARGO_HOME="$(CARGO_HOME)" sh -s -- \
+		    -y --no-modify-path --default-toolchain stable 2>&1; \
 		echo "RUSTUP_HOME=$(RUSTUP_HOME)" > "$(CARGO_HOME)/env"; \
 		echo "CARGO_HOME=$(CARGO_HOME)" >> "$(CARGO_HOME)/env"; \
 	fi
-	@echo "    Rust ready: $$("$(RUSTUP_HOME)/bin/rustc" --version 2>/dev/null)"
+	@echo "    Rust ready: $$(RUSTUP_HOME="$(RUSTUP_HOME)" CARGO_HOME="$(CARGO_HOME)" "$(RUSTUP_HOME)/bin/rustc" --version 2>/dev/null)"
 
 build: | setup-rust
 build: build-scheds build-tools
