@@ -108,7 +108,7 @@ set -e
 
 case "$1" in
   remove|deconfigure)
-    systemctl disable --now scx.service || true
+    systemctl disable --now scx.service 2>/dev/null || true
     ;;
   upgrade)
     ;;

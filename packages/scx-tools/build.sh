@@ -96,7 +96,7 @@ case "$1" in
   configure)
     if [ -z "$2" ]; then
       # fresh install — hand over from direct service to loader
-      systemctl disable --now scx.service || true
+      systemctl disable --now scx.service 2>/dev/null || true
       systemctl enable --now scx_loader.service || true
     fi
     ;;
@@ -113,7 +113,7 @@ set -e
 
 case "$1" in
   remove|deconfigure)
-    systemctl disable --now scx_loader.service || true
+    systemctl disable --now scx_loader.service 2>/dev/null || true
     ;;
   upgrade)
     ;;
