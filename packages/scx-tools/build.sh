@@ -45,7 +45,7 @@ install -Dm755 target/release/scx_loader "$SITEDIR/bin/scx_loader"
 install -Dm755 target/release/scxctl "$SITEDIR/bin/scxctl"
 
 install -Dm644 services/scx_loader.service \
-  "$SITEDIR/lib/systemd/system/scx_loader.service"
+  "$SITEDIR/share/scx-tools/scx_loader.service"
 
 install -Dm644 services/org.scx.Loader.service \
   "$SITEDIR/share/dbus-1/system-services/org.scx.Loader.service"
@@ -88,6 +88,11 @@ set -e
 
 case "$1" in
   configure)
+    # Install symlink so systemd can discover the unit without dpkg
+    # tracking /lib/systemd/system/ (avoids purge warning on shared dirs).
+    mkdir -p /lib/systemd/system
+    ln -sf /usr/share/scx-tools/scx_loader.service /lib/systemd/system/scx_loader.service
+
     systemctl daemon-reload || true
 
     # Transition from direct service to loader.
@@ -130,12 +135,14 @@ set -e
 
 case "$1" in
   remove)
+    rm -f /lib/systemd/system/scx_loader.service
     systemctl daemon-reload || true
     if dpkg -s scx-scheds 2>/dev/null | grep -q '^Status: install ok installed'; then
       systemctl enable --now scx.service || true
     fi
     ;;
   purge)
+    rm -f /lib/systemd/system/scx_loader.service
     systemctl daemon-reload || true
     rm -f /etc/scx_loader/config.toml
     rmdir /etc/scx_loader 2>/dev/null || true

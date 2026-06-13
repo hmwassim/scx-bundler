@@ -60,8 +60,10 @@ while IFS= read -r -d '' bin; do
 done < <(find target/release -maxdepth 1 -type f -name 'scx_*' -print0)
 
 # systemd service + config for running a scheduler directly at boot
-install -Dm644 services/scx "$STAGING/etc/default/scx"
-install -Dm644 services/scx.service "$STAGING/lib/systemd/system/scx.service"
+# Ship to package-private paths; postinst creates the shared-system symlinks
+# so dpkg never tracks shared directories like /lib/systemd/system/ or /etc/default/.
+install -Dm644 services/scx "$SITEDIR/share/scx-scheds/default-config"
+install -Dm644 services/scx.service "$SITEDIR/share/scx-scheds/scx.service"
 
 echo "==> Building .deb..."
 DEB_DIR="$STAGING/DEBIAN"
@@ -91,6 +93,17 @@ set -e
 
 case "$1" in
   configure)
+    # Install symlink so systemd can discover the unit file without dpkg
+    # tracking /lib/systemd/system/ (avoids purge warning on shared dirs).
+    mkdir -p /lib/systemd/system
+    ln -sf /usr/share/scx-scheds/scx.service /lib/systemd/system/scx.service
+
+    # Seed default config if not present.
+    if [ ! -f /etc/default/scx ]; then
+      mkdir -p /etc/default
+      cp /usr/share/scx-scheds/default-config /etc/default/scx
+    fi
+
     systemctl daemon-reload || true
     # Only manage scx.service when scx-tools is not present.
     # scx-tools owns the transition to scx_loader.service.
@@ -126,7 +139,17 @@ set -e
 case "$1" in
   remove|purge)
     systemctl daemon-reload || true
+    rm -f /lib/systemd/system/scx.service
     ;;
+esac
+
+case "$1" in
+  purge)
+    rm -f /etc/default/scx
+    ;;
+esac
+
+case "$1" in
   upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
     ;;
 esac
