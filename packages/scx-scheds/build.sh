@@ -91,8 +91,10 @@ set -e
 
 case "$1" in
   configure)
-    if [ -z "$2" ]; then
-      # fresh install
+    systemctl daemon-reload || true
+    # Only manage scx.service when scx-tools is not present.
+    # scx-tools owns the transition to scx_loader.service.
+    if ! dpkg -s scx-tools 2>/dev/null | grep -q '^Status: install'; then
       systemctl enable --now scx.service || true
     fi
     ;;
@@ -111,6 +113,7 @@ case "$1" in
     systemctl disable --now scx.service 2>/dev/null || true
     ;;
   upgrade)
+    systemctl stop scx.service 2>/dev/null || true
     ;;
 esac
 PRERM

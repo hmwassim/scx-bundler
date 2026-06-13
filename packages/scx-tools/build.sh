@@ -86,18 +86,19 @@ cat > "$DEB_DIR/postinst" <<-'POSTINST'
 #!/bin/sh
 set -e
 
-mkdir -p /etc/scx_loader
-
-if [ ! -f /etc/scx_loader/config.toml ]; then
-  cp /usr/share/scx_loader/config.toml /etc/scx_loader/config.toml
-fi
-
 case "$1" in
   configure)
-    if [ -z "$2" ]; then
-      # fresh install — hand over from direct service to loader
-      systemctl disable --now scx.service 2>/dev/null || true
-      systemctl enable --now scx_loader.service || true
+    systemctl daemon-reload || true
+
+    # Transition from direct service to loader.
+    systemctl disable scx.service 2>/dev/null || true
+    systemctl stop scx.service 2>/dev/null || true
+    systemctl enable scx_loader.service || true
+    systemctl start scx_loader.service || true
+
+    mkdir -p /etc/scx_loader
+    if [ ! -f /etc/scx_loader/config.toml ]; then
+      cp /usr/share/scx_loader/config.toml /etc/scx_loader/config.toml
     fi
     ;;
   abort-upgrade|abort-remove|abort-deconfigure)
@@ -116,6 +117,7 @@ case "$1" in
     systemctl disable --now scx_loader.service 2>/dev/null || true
     ;;
   upgrade)
+    systemctl stop scx_loader.service 2>/dev/null || true
     ;;
 esac
 PRERM

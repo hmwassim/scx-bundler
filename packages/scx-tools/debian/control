@@ -1,7 +1,7 @@
 Source: scx-tools
 Section: misc
 Priority: optional
-Maintainer: Andrea Righi <arighi@nvidia.com>
+Maintainer: HM. Wassim <hmwassim95@gmail.com>
 Build-Depends:
  debhelper-compat (= 13),
  cargo,
