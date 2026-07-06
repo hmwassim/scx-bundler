@@ -1,4 +1,4 @@
-VERSION ?= $(shell cat VERSION 2>/dev/null || echo 1.1.1)
+VERSION ?= $(shell cat VERSION 2>/dev/null || echo 1.1.2)
 RELEASE := trixie
 
 # libbpf-sys make build breaks on paths with spaces

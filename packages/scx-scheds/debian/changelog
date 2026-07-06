@@ -1,3 +1,9 @@
+scx-scheds (1.1.2-1) trixie; urgency=medium
+
+  * New upstream release 1.1.2.
+
+ -- HM. Wassim <hmwassim95@gmail.com>  Sun, 06 Jul 2026 00:00:00 +0200
+
 scx-scheds (1.1.1-1) trixie; urgency=medium
 
   * Initial release for Debian Trixie.

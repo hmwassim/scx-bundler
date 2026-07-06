@@ -6,7 +6,7 @@ PKGDIR="$(cd "$(dirname "$0")" && pwd)"
 TOPDIR="$(cd "$PKGDIR/../.." && pwd)"
 BUILDDIR="$TOPDIR/build"
 REPODIR="$TOPDIR/repo"
-VERSION="${1:-1.1.1}"
+VERSION="${1:-1.1.2}"
 UPSTREAM_TAG="v$VERSION"
 
 # Sandboxed Rust — inherits RUSTUP_HOME / CARGO_HOME from Makefile
