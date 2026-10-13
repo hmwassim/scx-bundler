@@ -31,12 +31,6 @@ make clean               # drop sources and staging dirs, keep Rust and repo/
 make distclean           # drop everything, including the Rust toolchain
 ```
 
-The repository in `repo/` is unsigned. To use it from APT:
-
-```
-deb [trusted=yes] file:/path/to/scx-bundler/repo trixie main
-```
-
 ## Services
 
 - `scx-scheds` alone enables `scx.service`, which runs the scheduler set in
