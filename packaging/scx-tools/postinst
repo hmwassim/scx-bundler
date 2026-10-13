@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e
+
+[ "$1" = configure ] || exit 0
+
+if [ ! -e /etc/scx_loader/config.toml ]; then
+    mkdir -p /etc/scx_loader
+    cp /usr/share/scx_loader/config.toml /etc/scx_loader/config.toml
+fi
+
+[ -d /run/systemd/system ] || exit 0
+
+systemctl daemon-reload || true
+if [ -z "$2" ]; then
+    # Fresh install: scx_loader replaces the standalone scx.service.
+    systemctl disable --now scx.service 2>/dev/null || true
+    systemctl enable --now scx_loader.service || true
+else
+    systemctl try-restart scx_loader.service || true
+fi

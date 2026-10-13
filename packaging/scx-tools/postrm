@@ -1,0 +1,18 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+remove)
+    if [ -d /run/systemd/system ]; then
+        systemctl daemon-reload || true
+        # Hand scheduling back to the standalone service if scx-scheds stays.
+        if [ -e /usr/lib/systemd/system/scx.service ]; then
+            systemctl enable --now scx.service || true
+        fi
+    fi
+    ;;
+purge)
+    rm -f /etc/scx_loader/config.toml
+    rmdir /etc/scx_loader 2>/dev/null || true
+    ;;
+esac
