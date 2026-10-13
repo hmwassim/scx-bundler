@@ -1,61 +1,49 @@
-VERSION ?= $(shell cat VERSION 2>/dev/null || echo 1.1.2)
-RELEASE := trixie
+VERSION  ?= $(shell cat VERSION)
+# Bump for packaging-only changes to the same upstream VERSION; reset to 1 on a new VERSION.
+REVISION ?= 1
+SUITE   ?= trixie
 
-# libbpf-sys make build breaks on paths with spaces
+export RUSTUP_HOME := $(CURDIR)/build/rust/rustup
+export CARGO_HOME  := $(CURDIR)/build/rust/cargo
+CARGO := $(CARGO_HOME)/bin/cargo
+
+POOL  := repo/pool/main/s
+DEBS  := $(POOL)/scx-scheds/scx-scheds_$(VERSION)-$(REVISION)_amd64.deb \
+         $(POOL)/scx-tools/scx-tools_$(VERSION)-$(REVISION)_amd64.deb
+
+# libbpf-sys fails to build in paths containing spaces
 ifneq ($(words $(CURDIR)),1)
-$(error Path contains spaces. Move the repo to a path without spaces)
+$(error move the checkout to a path without spaces)
 endif
-RUSTUP_HOME := $(abspath build/rust/rustup)
-CARGO_HOME := $(abspath build/rust/cargo)
-export RUSTUP_HOME
-export CARGO_HOME
 
-.PHONY: all build build-scheds build-tools repo install install-scheds install-tools \
-        setup-rust clean clean-all check-deps
+.PHONY: all debs repo install deps clean distclean
 
-all: build repo
+all: repo
 
-setup-rust: check-deps
-	@echo "==> Installing rustup (sandboxed in build/rust/)..."
-	@mkdir -p "$(RUSTUP_HOME)" "$(CARGO_HOME)"
-	@if [ ! -x "$(RUSTUP_HOME)/bin/rustup" ]; then \
-		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-		  | RUSTUP_HOME="$(RUSTUP_HOME)" CARGO_HOME="$(CARGO_HOME)" sh -s -- \
-		    -y --no-modify-path --default-toolchain stable 2>&1; \
-		echo "RUSTUP_HOME=$(RUSTUP_HOME)" > "$(CARGO_HOME)/env"; \
-		echo "CARGO_HOME=$(CARGO_HOME)" >> "$(CARGO_HOME)/env"; \
-	fi
-	@echo "    Rust ready: $$(RUSTUP_HOME="$(RUSTUP_HOME)" CARGO_HOME="$(CARGO_HOME)" "$(RUSTUP_HOME)/bin/rustc" --version 2>/dev/null)"
+debs: $(DEBS)
 
-build: | setup-rust
-build: build-scheds build-tools
+repo: $(DEBS)
+	./mkrepo.sh $(SUITE)
 
-build-scheds:
-	@echo "==> Building scx-scheds package..."
-	packages/scx-scheds/build.sh $(VERSION)
+install: $(DEBS)
+	sudo apt install $(addprefix ./,$(DEBS))
 
-build-tools:
-	@echo "==> Building scx-tools package..."
-	packages/scx-tools/build.sh $(VERSION)
+deps:
+	@./check-deps.sh
 
-repo:
-	@echo "==> Generating APT repository metadata..."
-	scripts/update-repo.sh $(RELEASE)
+$(CARGO): | deps
+	mkdir -p $(RUSTUP_HOME) $(CARGO_HOME)
+	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+		sh -s -- -y --no-modify-path --default-toolchain stable
 
-install: install-scheds install-tools
+$(POOL)/scx-scheds/scx-scheds_$(VERSION)-$(REVISION)_amd64.deb: | deps $(CARGO)
+	./build.sh scx-scheds $(VERSION) $(REVISION)
 
-install-scheds:
-	sudo dpkg -i repo/pool/main/s/scx-scheds/scx-scheds_$(VERSION)_amd64.deb
-
-install-tools:
-	sudo dpkg -i repo/pool/main/s/scx-tools/scx-tools_$(VERSION)_amd64.deb
-
-check-deps:
-	@echo "==> Checking build dependencies..."
-	scripts/check-deps.sh
+$(POOL)/scx-tools/scx-tools_$(VERSION)-$(REVISION)_amd64.deb: | deps $(CARGO)
+	./build.sh scx-tools $(VERSION) $(REVISION)
 
 clean:
-	rm -rf build/*
+	rm -rf build/src build/root
 
-clean-all: clean
-	rm -rf repo/pool repo/dists
+distclean:
+	rm -rf build repo
