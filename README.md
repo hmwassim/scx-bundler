@@ -1,56 +1,46 @@
 # scx-bundler
 
 Builds Debian packages for [sched-ext/scx](https://github.com/sched-ext/scx) and
-[sched-ext/scx-loader](https://github.com/sched-ext/scx-loader) with a
-sandboxed Rust toolchain — no `~/.cargo` or `~/.rustup` pollution.
+[sched-ext/scx-loader](https://github.com/sched-ext/scx-loader), plus a local APT
+repository to serve them from. Rust is installed into `build/rust/`, so
+`~/.cargo` and `~/.rustup` are left untouched.
 
-## Packages
+| Package      | Contents                                              |
+|--------------|-------------------------------------------------------|
+| `scx-scheds` | scheduler binaries (`scx_*`, `scxtop`) and `scx.service` |
+| `scx-tools`  | `scx_loader` daemon and `scxctl`                      |
 
-| Package | Contents | Source |
-|---------|----------|--------|
-| `scx-scheds` | sched_ext scheduler binaries (scx_bpfland, scx_rusty, ...) | [scx](https://github.com/sched-ext/scx) |
-| `scx-tools` | scx_loader daemon + scxctl CLI | [scx-loader](https://github.com/sched-ext/scx-loader) |
+## Build dependencies
 
-## Dependencies
+`make` checks these first and prints the exact `apt install` line for anything missing.
 
-```bash
-sudo apt install git dpkg-dev gzip coreutils curl clang
-# optional — needed for compiling the schedulers:
-sudo apt install libbpf-dev libelf-dev libcap-dev zlib1g-dev libseccomp-dev \
-                 llvm linux-libc-dev
+```sh
+sudo apt install git curl clang llvm pkg-config dpkg-dev \
+    libbpf-dev libelf-dev libseccomp-dev zlib1g-dev protobuf-compiler
 ```
 
-## Build
+## Usage
 
-Rust is bootstrapped via rustup into `build/rust/` on first run.
-Both repos must have a matching `v<VERSION>` tag or the build fails.
-
-```bash
-make all                   # build both .debs → generate repo
-make build                 # just build the .debs
-make build VERSION=1.0.0   # build a specific upstream version
+```sh
+make                     # build both .debs for VERSION and write repo metadata
+make VERSION=1.1.4       # build another upstream tag (v1.1.4 must exist in both repos)
+make REVISION=2          # rebuild the same upstream version with packaging fixes
+make install             # apt install the built .debs
+make -B debs             # force a rebuild
+make clean               # drop sources and staging dirs, keep Rust and repo/
+make distclean           # drop everything, including the Rust toolchain
 ```
 
-## Install
+The repository in `repo/` is unsigned. To use it from APT:
 
-```bash
-make install                # sudo dpkg -i both .debs
-sudo dpkg -i repo/pool/*/*/*/*.deb
+```
+deb [trusted=yes] file:/path/to/scx-bundler/repo trixie main
 ```
 
-## How it works
+## Services
 
-1. Verifies the version tag exists in both upstream repos
-2. `git clone` at the requested tag
-3. `cargo build --release` with sandboxed Rust (`build/rust/{rustup,cargo}/`)
-4. Scheduler binaries discovered dynamically with `find target/release -name 'scx_*'`
-5. `dpkg-deb --build` into `repo/pool/main/`
-6. `scx-tools` postinst copies config to `/etc/scx_loader/` and runs `daemon-reload`
-
-## Clean
-
-```bash
-make clean           # remove build artifacts (keeps rust toolchain)
-make clean-all       # remove build artifacts + repo pool/dists
-rm -rf build/rust    # remove the sandboxed Rust toolchain entirely
-```
+- `scx-scheds` alone enables `scx.service`, which runs the scheduler set in
+  `/etc/default/scx`.
+- `scx-tools` disables `scx.service` and enables `scx_loader.service` instead,
+  configured by `/etc/scx_loader/config.toml`. Removing `scx-tools` switches
+  back to `scx.service`.

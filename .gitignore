@@ -1,8 +1,2 @@
 build/
 repo/
-*.deb
-*.build
-*.changes
-*.buildinfo
-
-ref/
