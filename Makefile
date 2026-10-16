@@ -1,6 +1,13 @@
-VERSION  ?= $(shell cat VERSION)
-# Bump for packaging-only changes to the same upstream VERSION; reset to 1 on a new VERSION.
-REVISION ?= 1
+# VERSION=x.y.z overrides both packages at once.
+ifdef VERSION
+SCHEDS_VERSION := $(VERSION)
+TOOLS_VERSION  := $(VERSION)
+endif
+include versions.mk
+# Bump for packaging-only changes to the same upstream version; reset to 1 on a new one.
+REVISION        ?= 1
+SCHEDS_REVISION ?= $(REVISION)
+TOOLS_REVISION  ?= $(REVISION)
 SUITE   ?= trixie
 
 export RUSTUP_HOME := $(CURDIR)/build/rust/rustup
@@ -8,8 +15,9 @@ export CARGO_HOME  := $(CURDIR)/build/rust/cargo
 CARGO := $(CARGO_HOME)/bin/cargo
 
 POOL  := repo/pool/main/s
-DEBS  := $(POOL)/scx-scheds/scx-scheds_$(VERSION)-$(REVISION)_amd64.deb \
-         $(POOL)/scx-tools/scx-tools_$(VERSION)-$(REVISION)_amd64.deb
+SCHEDS_DEB := $(POOL)/scx-scheds/scx-scheds_$(SCHEDS_VERSION)-$(SCHEDS_REVISION)_amd64.deb
+TOOLS_DEB  := $(POOL)/scx-tools/scx-tools_$(TOOLS_VERSION)-$(TOOLS_REVISION)_amd64.deb
+DEBS       := $(SCHEDS_DEB) $(TOOLS_DEB)
 
 # libbpf-sys fails to build in paths containing spaces
 ifneq ($(words $(CURDIR)),1)
@@ -36,11 +44,11 @@ $(CARGO): | deps
 	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
 		sh -s -- -y --no-modify-path --default-toolchain stable
 
-$(POOL)/scx-scheds/scx-scheds_$(VERSION)-$(REVISION)_amd64.deb: | deps $(CARGO)
-	./build.sh scx-scheds $(VERSION) $(REVISION)
+$(SCHEDS_DEB): | deps $(CARGO)
+	./build.sh scx-scheds $(SCHEDS_VERSION) $(SCHEDS_REVISION)
 
-$(POOL)/scx-tools/scx-tools_$(VERSION)-$(REVISION)_amd64.deb: | deps $(CARGO)
-	./build.sh scx-tools $(VERSION) $(REVISION)
+$(TOOLS_DEB): | deps $(CARGO)
+	./build.sh scx-tools $(TOOLS_VERSION) $(TOOLS_REVISION)
 
 clean:
 	rm -rf build/src build/root

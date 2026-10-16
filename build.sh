@@ -18,6 +18,8 @@ OUT=$TOP/repo/pool/main/s/$PKG
 export RUSTUP_HOME=${RUSTUP_HOME:-$TOP/build/rust/rustup}
 export CARGO_HOME=${CARGO_HOME:-$TOP/build/rust/cargo}
 export PATH=$CARGO_HOME/bin:$PATH
+# cid-form schedulers (scx_mavd since 1.1.4) refuse to build with clang < 22.
+export BPF_CLANG=${BPF_CLANG:-clang-22}
 
 case $PKG in
 scx-scheds)
@@ -45,7 +47,8 @@ esac
 
 stage_scheds() {
     cargo build --release --workspace \
-        --exclude xtask --exclude scxcash --exclude vmlinux_docify --exclude scx_arena_selftests
+        --exclude xtask --exclude scxcash --exclude vmlinux_docify --exclude scx_arena_selftests \
+        --exclude scx_arena_libarena_selftests
 
     # -executable skips cargo's scx_*.d dependency files
     find target/release -maxdepth 1 -type f -executable \( -name 'scx_*' -o -name scxtop \) \

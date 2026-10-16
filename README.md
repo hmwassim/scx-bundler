@@ -15,20 +15,22 @@ repository to serve them from. Rust is installed into `build/rust/`, so
 `make` checks these first and prints the exact `apt install` line for anything missing.
 
 ```sh
-sudo apt install git curl clang llvm pkg-config dpkg-dev \
-    libbpf-dev libelf-dev libseccomp-dev zlib1g-dev protobuf-compiler
+sudo apt install git curl clang clang-22 llvm pkg-config dpkg-dev \
+    libbpf-dev libelf-dev libseccomp-dev libssl-dev zlib1g-dev protobuf-compiler
 ```
 
 ## Usage
 
 ```sh
-make                     # build both .debs for VERSION and write repo metadata
-make VERSION=1.1.4       # build another upstream tag (v1.1.4 must exist in both repos)
-make REVISION=2          # rebuild the same upstream version with packaging fixes
-make install             # apt install the built .debs
-make -B debs             # force a rebuild
-make clean               # drop sources and staging dirs, keep Rust and repo/
-make distclean           # drop everything, including the Rust toolchain
+make                      # build both .debs for the tags in versions.mk and write repo metadata
+make SCHEDS_VERSION=1.1.5 # build another scx tag
+make TOOLS_VERSION=1.1.4  # build another scx-loader tag
+make VERSION=1.1.4        # same tag for both (must exist in both repos)
+make TOOLS_REVISION=2     # rebuild one package with packaging fixes (REVISION=2 for both)
+make install              # apt install the built .debs
+make -B debs              # force a rebuild
+make clean                # drop sources and staging dirs, keep Rust and repo/
+make distclean            # drop everything, including the Rust toolchain
 ```
 
 ## Services

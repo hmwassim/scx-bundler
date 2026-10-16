@@ -2,8 +2,8 @@
 # Fail early, listing every missing build dependency in one apt command.
 set -euo pipefail
 
-PACKAGES=(git curl clang llvm pkg-config dpkg-dev protobuf-compiler
-          libbpf-dev libelf-dev libseccomp-dev zlib1g-dev)
+PACKAGES=(git curl clang clang-22 llvm pkg-config dpkg-dev protobuf-compiler
+          libbpf-dev libelf-dev libseccomp-dev libssl-dev zlib1g-dev)
 
 missing=()
 for pkg in "${PACKAGES[@]}"; do
