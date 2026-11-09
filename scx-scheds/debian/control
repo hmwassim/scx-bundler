@@ -1,0 +1,34 @@
+Source: scx-scheds
+Section: admin
+Priority: optional
+Maintainer: hmwassim <hmwassim@tuta.io>
+Build-Depends:
+ debhelper-compat (= 13),
+ cargo (>= 1.91),
+ rustc (>= 1.91),
+ clang-22,
+ llvm-22,
+ pkgconf,
+ libelf-dev,
+ zlib1g-dev,
+ libseccomp-dev,
+ libssl-dev,
+ libbpf-dev,
+ protobuf-compiler,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/sched-ext/scx
+
+Package: scx-scheds
+Architecture: amd64
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+Description: sched_ext schedulers and tools
+ sched_ext is a Linux kernel feature that lets CPU schedulers be written
+ as BPF programs and loaded at runtime, without rebuilding the kernel.
+ It needs a kernel built with CONFIG_SCHED_CLASS_EXT.
+ .
+ This package contains the schedulers from the sched-ext/scx project,
+ including scx_bpfland, scx_cosmos, scx_flash, scx_lavd, scx_layered,
+ scx_p2dq, scx_rustland and scx_rusty, plus the scxtop monitoring tool.

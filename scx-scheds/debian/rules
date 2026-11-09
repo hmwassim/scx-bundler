@@ -1,0 +1,42 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export CARGO_HOME = $(CURDIR)/debian/cargo-home
+export RUSTFLAGS = $(foreach f,$(shell dpkg-buildflags --get LDFLAGS),-C link-arg=$(f))
+
+# Using clang-22, some schedulers refuse to build their BPF code with older clang
+export BPF_CLANG = clang-22
+
+EXCLUDES = scx_rlfifo scx_mitosis scx_characterize xtask vmlinux_docify \
+	scx_arena_selftests scx_arena_libarena_selftests
+
+%:
+	dh $@ --buildsystem=none
+
+override_dh_auto_build:
+	cargo build --release --frozen --verbose --workspace \
+		$(foreach c,$(EXCLUDES),--exclude $(c))
+
+# Skipping tests, they need BPF & root
+override_dh_auto_test:
+
+override_dh_auto_install:
+	find target/release -maxdepth 1 -type f -executable ! -name '*.so' \
+		-exec install -Dm755 -t debian/scx-scheds/usr/bin/ {} +
+	install -Dm644 services/scx.service debian/scx-scheds/usr/lib/systemd/system/scx.service
+	install -Dm644 services/scx debian/scx-scheds/etc/default/scx
+	install -d debian/scx-scheds/usr/share/doc/scx-scheds
+	debian/third-party-licenses >debian/scx-scheds/usr/share/doc/scx-scheds/THIRD-PARTY-LICENSES
+
+# Not enabling scx.service, only one scheduler can run at a time
+override_dh_installsystemd:
+	dh_installsystemd --no-enable --no-start
+
+override_dh_strip:
+	dh_strip --no-automatic-dbgsym
+
+# Skipping dwz, it chokes on large Rust binaries
+override_dh_dwz:
+
+override_dh_auto_clean:
+	rm -rf target
