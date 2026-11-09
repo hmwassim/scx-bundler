@@ -1,0 +1,36 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export CARGO_HOME = $(CURDIR)/debian/cargo-home
+export RUSTFLAGS = $(foreach f,$(shell dpkg-buildflags --get LDFLAGS),-C link-arg=$(f))
+
+%:
+	dh $@ --buildsystem=none
+
+override_dh_auto_build:
+	cargo build --release --frozen --verbose --workspace --all-features
+
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	cargo test --release --frozen --workspace --all-features
+endif
+
+override_dh_auto_install:
+	install -Dm755 -t debian/scx-tools/usr/bin/ \
+		target/release/scx_loader target/release/scxctl target/release/scxtui
+	./target/release/xtask install --destdir debian/scx-tools
+	install -d debian/scx-tools/usr/share/doc/scx-tools
+	debian/third-party-licenses >debian/scx-tools/usr/share/doc/scx-tools/THIRD-PARTY-LICENSES
+
+# Not enabling scx_loader, D-Bus starts it on demand
+override_dh_installsystemd:
+	dh_installsystemd --no-enable --no-start
+
+override_dh_strip:
+	dh_strip --no-automatic-dbgsym
+
+# Skipping dwz, it chokes on large Rust binaries
+override_dh_dwz:
+
+override_dh_auto_clean:
+	rm -rf target

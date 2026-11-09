@@ -1,0 +1,31 @@
+Source: scx-tools
+Section: admin
+Priority: optional
+Maintainer: hmwassim <hmwassim@tuta.io>
+Build-Depends:
+ debhelper-compat (= 13),
+ cargo (>= 1.91),
+ rustc (>= 1.91),
+ clang,
+ pkgconf,
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/sched-ext/scx-loader
+
+Package: scx-tools
+Architecture: amd64
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+ scx-scheds,
+ polkitd,
+ default-dbus-system-bus | dbus-system-bus,
+Description: D-Bus service and tools for managing sched_ext schedulers
+ scx_loader is a D-Bus service that starts, stops and switches sched_ext
+ schedulers on request. It is started on demand by D-Bus.
+ .
+ This package contains:
+  - scx_loader: the D-Bus service, with its systemd unit, D-Bus policy
+    and polkit action
+  - scxctl: a command-line client for scx_loader
+  - scxtui: a terminal user interface for scx_loader

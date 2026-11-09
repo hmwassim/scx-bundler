@@ -1,0 +1,30 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: scx-loader
+Upstream-Contact: https://github.com/sched-ext/scx-loader/issues
+Source: https://github.com/sched-ext/scx-loader
+
+Files: *
+Copyright: 2024-2025 Vladislav Nepogodin <vnepogodin@cachyos.org>
+           The sched_ext authors
+License: GPL-2.0-only
+Comment:
+ The binaries statically include Rust crates from crates.io, each under its
+ own license (mostly MIT and/or Apache-2.0). Their license texts are in
+ /usr/share/doc/scx-tools/THIRD-PARTY-LICENSES.gz.
+
+Files: debian/*
+Copyright: 2026 hmwassim <hmwassim@tuta.io>
+License: GPL-2.0-only
+
+License: GPL-2.0-only
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License version 2 as
+ published by the Free Software Foundation.
+ .
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ version 2 can be found in "/usr/share/common-licenses/GPL-2".

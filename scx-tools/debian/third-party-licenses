@@ -1,0 +1,24 @@
+#!/bin/sh
+set -eu
+
+awk -F'"' '
+   /^\[\[package\]\]/ { name = ""; version = "" }
+   /^name = /         { name = $2 }
+   /^version = /      { version = $2 }
+   /^source = "registry/ { print name "-" version }
+' Cargo.lock | sort -u | while read -r crate; do
+   dir="$(ls -d "$CARGO_HOME"/registry/src/*/"$crate")"
+   license="$(sed -n 's/^license = "\(.*\)"/\1/p' "$dir/Cargo.toml" | head -n 1)"
+
+   echo "==== $crate ($license)"
+   echo
+   found=''
+   for file in "$dir"/LICEN[CS]E* "$dir"/licen[cs]e* "$dir"/COPYING* "$dir"/NOTICE* "$dir"/UNLICENSE*; do
+      [ -f "$file" ] || continue
+      cat "$file"
+      echo
+      found=1
+   done
+   [ -n "$found" ] || echo "No license file shipped, see the crate's metadata: $license"
+   echo
+done
