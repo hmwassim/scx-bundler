@@ -17,7 +17,7 @@ endif
 
 override_dh_auto_install:
 	install -Dm755 -t debian/scx-tools/usr/bin/ \
-		target/release/scx_loader target/release/scxctl target/release/scxtui
+		target/release/scx_loader target/release/scxctl
 	./target/release/xtask install --destdir debian/scx-tools
 	install -d debian/scx-tools/usr/share/doc/scx-tools
 	debian/third-party-licenses >debian/scx-tools/usr/share/doc/scx-tools/THIRD-PARTY-LICENSES

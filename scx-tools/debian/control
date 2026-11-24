@@ -28,4 +28,5 @@ Description: D-Bus service and tools for managing sched_ext schedulers
   - scx_loader: the D-Bus service, with its systemd unit, D-Bus policy
     and polkit action
   - scxctl: a command-line client for scx_loader
-  - scxtui: a terminal user interface for scx_loader
+ .
+ scxtui moved to the scx project and is now in scx-scheds.
