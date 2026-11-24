@@ -1,3 +1,10 @@
+scx-scheds (1.1.5-1) trixie; urgency=medium
+
+  * Package scx 1.1.5.
+  * Ship scxtui, which moved here from scx-loader, and scxcli.
+
+ -- hmwassim <hmwassim@tuta.io>  Tue, 24 Nov 2026 22:54:01 +0100
+
 scx-scheds (1.1.4-1) trixie; urgency=medium
 
   * Package scx 1.1.4.
