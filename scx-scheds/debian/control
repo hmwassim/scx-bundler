@@ -25,9 +25,9 @@ Depends:
  ${shlibs:Depends},
  ${misc:Depends},
 Breaks:
- scx-tools (<< 1.1.3-2),
+ scx-tools (<< 1.1.3-2~),
 Replaces:
- scx-tools (<< 1.1.3-2),
+ scx-tools (<< 1.1.3-2~),
 Description: sched_ext schedulers and tools
  sched_ext is a Linux kernel feature that lets CPU schedulers be written
  as BPF programs and loaded at runtime, without rebuilding the kernel.
