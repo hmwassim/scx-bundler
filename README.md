@@ -5,8 +5,8 @@ Builds Debian 13 (trixie) amd64 packages for the
 
 | Package | Upstream | Contents |
 |---|---|---|
-| `scx-scheds` | [sched-ext/scx](https://github.com/sched-ext/scx) | the schedulers (`scx_bpfland`, `scx_lavd`, `scx_rusty`, …) and `scxtop` |
-| `scx-tools` | [sched-ext/scx-loader](https://github.com/sched-ext/scx-loader) | `scx_loader` (D-Bus service), `scxctl`, `scxtui` |
+| `scx-scheds` | [sched-ext/scx](https://github.com/sched-ext/scx) | the schedulers (`scx_bpfland`, `scx_lavd`, `scx_rusty`, …), `scxtop`, `scxtui`, `scxcli` |
+| `scx-tools` | [sched-ext/scx-loader](https://github.com/sched-ext/scx-loader) | `scx_loader` (D-Bus service), `scxctl` |
 
 ## Build
 
@@ -18,7 +18,7 @@ Requires Docker.
 
 Each package is built in a fresh `debian:trixie` container with `dpkg-buildpackage`
 and checked with `lintian`. The results go to `out/`, for example
-`out/scx-scheds_1.1.4-1_amd64.deb`.
+`out/scx-scheds_1.1.5-1_amd64.deb`.
 
 Rust comes from `trixie-backports`, because upstream needs a newer version than trixie
 has. The schedulers' BPF code is built with trixie's `clang-22`, because some schedulers
